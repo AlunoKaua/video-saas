@@ -39,6 +39,20 @@ def load_video(url: str) -> YouTube:
         raise HTTPException(status_code=400, detail="Could not load video") from exc
 
 
+def video_metadata(video: YouTube) -> dict:
+    try:
+        return {
+            "title": video.title,
+            "author": video.author,
+            "thumbnail": video.thumbnail_url,
+            "durationSeconds": video.length,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not read video metadata") from exc
+
+
 def enforce_duration_limit(video: YouTube, allow_long_videos: bool) -> None:
     if not allow_long_videos and video.length and video.length > MAX_DURATION_SECONDS:
         raise HTTPException(status_code=403, detail="Video is too long for your plan")
@@ -58,13 +72,7 @@ def safe_download_name(title: str) -> str:
 def metadata(payload: VideoRequest, authorization: Optional[str] = Header(default=None)):
     verify_internal_token(authorization)
     video = load_video(str(payload.url))
-
-    return {
-        "title": video.title,
-        "author": video.author,
-        "thumbnail": video.thumbnail_url,
-        "durationSeconds": video.length,
-    }
+    return video_metadata(video)
 
 
 @app.post("/download")
@@ -72,17 +80,27 @@ def download(payload: VideoRequest, authorization: Optional[str] = Header(defaul
     verify_internal_token(authorization)
     video = load_video(str(payload.url))
     enforce_duration_limit(video, payload.allowLongVideos)
-    stream = video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
+
+    try:
+        stream = video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not read downloadable streams") from exc
 
     if stream is None:
         raise HTTPException(status_code=404, detail="No downloadable mp4 stream found")
 
-    safe_name = safe_download_name(video.title)
-    output_path = stream.download(output_path=str(DOWNLOAD_DIR), filename=safe_name)
+    metadata = video_metadata(video)
+    safe_name = safe_download_name(metadata["title"])
+
+    try:
+        output_path = stream.download(output_path=str(DOWNLOAD_DIR), filename=safe_name)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not download video") from exc
+
     file_name = Path(output_path).name
 
     return {
-        "title": video.title,
+        "title": metadata["title"],
         "fileName": file_name,
         "downloadUrl": f"/files/{file_name}",
     }
