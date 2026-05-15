@@ -4,10 +4,14 @@ services:
     runtime: python
     plan: free
     rootDir: .
-    buildCommand: pip install -r services/downloader/requirements.txt
+    buildCommand: export CARGO_HOME=/tmp/cargo && export PIP_CACHE_DIR=/tmp/pip-cache && pip install -r services/downloader/requirements.txt
     startCommand: uvicorn services.downloader.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: CARGO_HOME
+        value: /tmp/cargo
+      - key: PIP_CACHE_DIR
+        value: /tmp/pip-cache
       - key: INTERNAL_API_TOKEN
         sync: false
