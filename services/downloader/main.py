@@ -41,6 +41,7 @@ def youtube_cookie_file() -> Optional[str]:
     cookies_gzip_base64 = os.getenv("YOUTUBE_COOKIES_GZIP_BASE64")
     cookies_base64 = os.getenv("YOUTUBE_COOKIES_BASE64")
     if not cookies_gzip_base64 and not cookies_base64:
+        logger.warning("YouTube cookies env not configured")
         return None
 
     try:
@@ -55,6 +56,7 @@ def youtube_cookie_file() -> Optional[str]:
     if not COOKIES_FILE.exists() or COOKIES_FILE.read_text() != cookies:
         COOKIES_FILE.write_text(cookies)
 
+    logger.info("Using YouTube cookies file with %s bytes", len(cookies))
     return str(COOKIES_FILE)
 
 
