@@ -6,7 +6,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
-from pytubefix import YouTube
+from yt_dlp import YoutubeDL
 
 import logging
 import os
@@ -34,30 +34,39 @@ def verify_internal_token(authorization: Optional[str]) -> None:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-def load_video(url: str) -> YouTube:
-    try:
-        return YouTube(url)
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail="Could not load video") from exc
+def ydl_options(**overrides):
+    options = {
+        "quiet": True,
+        "no_warnings": True,
+        "noplaylist": True,
+        "extract_flat": False,
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+            "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        },
+    }
+    options.update(overrides)
+    return options
 
 
-def video_metadata(video: YouTube) -> dict:
+def load_metadata(url: str) -> dict:
     try:
-        return {
-            "title": video.title,
-            "author": video.author,
-            "thumbnail": video.thumbnail_url,
-            "durationSeconds": video.length,
-        }
-    except HTTPException:
-        raise
+        with YoutubeDL(ydl_options(skip_download=True)) as ydl:
+            info = ydl.extract_info(url, download=False)
     except Exception as exc:
         logger.exception("Could not read video metadata")
-        raise HTTPException(status_code=400, detail="Could not read video metadata") from exc
+        raise HTTPException(status_code=400, detail="Não foi possível consultar o vídeo. O YouTube pode ter bloqueado o servidor temporariamente.") from exc
+
+    return {
+        "title": info.get("title") or "video",
+        "author": info.get("uploader") or info.get("channel"),
+        "thumbnail": info.get("thumbnail"),
+        "durationSeconds": info.get("duration"),
+    }
 
 
-def enforce_duration_limit(video: YouTube, allow_long_videos: bool) -> None:
-    if not allow_long_videos and video.length and video.length > MAX_DURATION_SECONDS:
+def enforce_duration_limit(duration_seconds: Optional[int], allow_long_videos: bool) -> None:
+    if not allow_long_videos and duration_seconds and duration_seconds > MAX_DURATION_SECONDS:
         raise HTTPException(status_code=403, detail="Video is too long for your plan")
 
 
@@ -74,40 +83,42 @@ def safe_download_name(title: str) -> str:
 @app.post("/metadata")
 def metadata(payload: VideoRequest, authorization: Optional[str] = Header(default=None)):
     verify_internal_token(authorization)
-    video = load_video(str(payload.url))
-    return video_metadata(video)
+    return load_metadata(str(payload.url))
 
 
 @app.post("/download")
 def download(payload: VideoRequest, authorization: Optional[str] = Header(default=None)):
     verify_internal_token(authorization)
-    video = load_video(str(payload.url))
-    enforce_duration_limit(video, payload.allowLongVideos)
+    metadata = load_metadata(str(payload.url))
+    enforce_duration_limit(metadata["durationSeconds"], payload.allowLongVideos)
 
-    try:
-        stream = video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
-    except Exception as exc:
-        logger.exception("Could not read downloadable streams")
-        raise HTTPException(status_code=400, detail="Could not read downloadable streams") from exc
-
-    if stream is None:
-        raise HTTPException(status_code=404, detail="No downloadable mp4 stream found")
-
-    metadata = video_metadata(video)
     safe_name = safe_download_name(metadata["title"])
+    output_template = str(DOWNLOAD_DIR / safe_name)
 
     try:
-        output_path = stream.download(output_path=str(DOWNLOAD_DIR), filename=safe_name)
+        with YoutubeDL(
+            ydl_options(
+                format="best[ext=mp4]/best",
+                outtmpl=output_template,
+                merge_output_format="mp4",
+            )
+        ) as ydl:
+            ydl.download([str(payload.url)])
     except Exception as exc:
         logger.exception("Could not download video")
-        raise HTTPException(status_code=400, detail="Could not download video") from exc
+        raise HTTPException(status_code=400, detail="Não foi possível baixar o vídeo. O YouTube pode ter bloqueado o servidor temporariamente.") from exc
 
-    file_name = Path(output_path).name
+    file_path = DOWNLOAD_DIR / safe_name
+    if not file_path.exists():
+        matches = list(DOWNLOAD_DIR.glob(f"{Path(safe_name).stem}.*"))
+        if not matches:
+            raise HTTPException(status_code=404, detail="Downloaded file not found")
+        file_path = matches[0]
 
     return {
         "title": metadata["title"],
-        "fileName": file_name,
-        "downloadUrl": f"/files/{file_name}",
+        "fileName": file_path.name,
+        "downloadUrl": f"/files/{file_path.name}",
     }
 
 
