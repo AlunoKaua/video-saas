@@ -8,11 +8,13 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 from pytubefix import YouTube
 
+import logging
 import os
 import re
 import unicodedata
 
 app = FastAPI(title="Video SaaS Downloader")
+logger = logging.getLogger("video_saas_downloader")
 
 MAX_DURATION_SECONDS = 60 * 30
 DOWNLOAD_DIR = Path(gettempdir()) / "video-saas-downloads"
@@ -50,6 +52,7 @@ def video_metadata(video: YouTube) -> dict:
     except HTTPException:
         raise
     except Exception as exc:
+        logger.exception("Could not read video metadata")
         raise HTTPException(status_code=400, detail="Could not read video metadata") from exc
 
 
@@ -84,6 +87,7 @@ def download(payload: VideoRequest, authorization: Optional[str] = Header(defaul
     try:
         stream = video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
     except Exception as exc:
+        logger.exception("Could not read downloadable streams")
         raise HTTPException(status_code=400, detail="Could not read downloadable streams") from exc
 
     if stream is None:
@@ -95,6 +99,7 @@ def download(payload: VideoRequest, authorization: Optional[str] = Header(defaul
     try:
         output_path = stream.download(output_path=str(DOWNLOAD_DIR), filename=safe_name)
     except Exception as exc:
+        logger.exception("Could not download video")
         raise HTTPException(status_code=400, detail="Could not download video") from exc
 
     file_name = Path(output_path).name
