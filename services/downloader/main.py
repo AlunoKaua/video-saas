@@ -56,7 +56,7 @@ def youtube_cookie_file() -> Optional[str]:
     if not COOKIES_FILE.exists() or COOKIES_FILE.read_text() != cookies:
         COOKIES_FILE.write_text(cookies)
 
-    logger.info("Using YouTube cookies file with %s bytes", len(cookies))
+    logger.warning("Using YouTube cookies file with %s bytes", len(cookies))
     return str(COOKIES_FILE)
 
 
@@ -66,11 +66,6 @@ def ydl_options(**overrides):
         "no_warnings": True,
         "noplaylist": True,
         "extract_flat": False,
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["android", "web_creator"],
-            },
-        },
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
             "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
