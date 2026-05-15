@@ -26,10 +26,10 @@ export default function PricingPage() {
         </section>
 
         <section className="rounded-3xl border border-slate-950 bg-slate-950 p-8 text-white shadow-sm">
-          <p className="text-sm font-semibold text-brand-200">Assinatura</p>
+          <p className="text-sm font-semibold text-brand-200">Assinatura Premium</p>
           <div className="mt-4 flex items-end gap-2">
-            <span className="text-5xl font-bold">Pro</span>
-            <span className="pb-2 text-slate-300">recorrente</span>
+            <span className="text-5xl font-bold">R$25</span>
+            <span className="pb-2 text-slate-300">por mês</span>
           </div>
           <ul className="mt-6 space-y-3 text-slate-200">
             <li>Libera vídeos acima de 30 minutos</li>
@@ -38,7 +38,7 @@ export default function PricingPage() {
             <li>Cobrança segura via Stripe</li>
           </ul>
           <form action="/api/stripe/subscription-checkout" method="POST" className="mt-8">
-            <button className="w-full rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950">Assinar plano Pro</button>
+            <button className="w-full rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950">Assinar Premium</button>
           </form>
         </section>
       </div>
