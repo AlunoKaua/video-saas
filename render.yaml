@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: video-saas-downloader
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r services/downloader/requirements.txt
+    startCommand: uvicorn services.downloader.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: INTERNAL_API_TOKEN
+        sync: false
