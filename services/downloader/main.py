@@ -9,6 +9,7 @@ from pydantic import BaseModel, HttpUrl
 from yt_dlp import YoutubeDL
 
 import base64
+import gzip
 import logging
 import os
 import re
@@ -37,15 +38,19 @@ def verify_internal_token(authorization: Optional[str]) -> None:
 
 
 def youtube_cookie_file() -> Optional[str]:
+    cookies_gzip_base64 = os.getenv("YOUTUBE_COOKIES_GZIP_BASE64")
     cookies_base64 = os.getenv("YOUTUBE_COOKIES_BASE64")
-    if not cookies_base64:
+    if not cookies_gzip_base64 and not cookies_base64:
         return None
 
     try:
-        cookies = base64.b64decode(cookies_base64).decode("utf-8")
+        if cookies_gzip_base64:
+            cookies = gzip.decompress(base64.b64decode(cookies_gzip_base64)).decode("utf-8")
+        else:
+            cookies = base64.b64decode(cookies_base64 or "").decode("utf-8")
     except Exception as exc:
-        logger.exception("Invalid YOUTUBE_COOKIES_BASE64")
-        raise HTTPException(status_code=500, detail="YOUTUBE_COOKIES_BASE64 inválido") from exc
+        logger.exception("Invalid YouTube cookies env")
+        raise HTTPException(status_code=500, detail="Cookies do YouTube inválidos") from exc
 
     if not COOKIES_FILE.exists() or COOKIES_FILE.read_text() != cookies:
         COOKIES_FILE.write_text(cookies)
