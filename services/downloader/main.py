@@ -40,6 +40,11 @@ def ydl_options(**overrides):
         "no_warnings": True,
         "noplaylist": True,
         "extract_flat": False,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web_creator"],
+            },
+        },
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
             "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
