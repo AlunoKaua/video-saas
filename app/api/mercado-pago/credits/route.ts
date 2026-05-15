@@ -53,7 +53,6 @@ export async function POST() {
     },
     payment_methods: {
       excluded_payment_methods: [
-        { id: "account_money" },
         { id: "bolbradesco" },
         { id: "pec" },
         { id: "visa" },
