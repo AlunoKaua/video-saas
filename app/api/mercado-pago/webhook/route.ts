@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMercadoPagoPayment, isMercadoPagoWebhookSignatureConfigured, MERCADO_PAGO_CURRENCY } from "@/lib/mercado-pago";
+import { getMercadoPagoPayment, isMercadoPagoWebhookSignatureConfigured, MERCADO_PAGO_CURRENCY, shouldUseMercadoPagoSandbox } from "@/lib/mercado-pago";
 import { prisma } from "@/lib/prisma";
 
 function centsFromAmount(amount: number) {
@@ -65,7 +65,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true, status: payment.status });
   }
 
-  if (payment.payment_type_id !== "bank_transfer" || payment.payment_method_id !== "pix") {
+  const isPix = payment.payment_type_id === "bank_transfer" && payment.payment_method_id === "pix";
+  const isSandboxBalance = shouldUseMercadoPagoSandbox() && payment.payment_method_id === "account_money";
+
+  if (!isPix && !isSandboxBalance) {
     return NextResponse.json({ received: true, ignored: true });
   }
 

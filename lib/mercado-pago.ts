@@ -84,6 +84,10 @@ export async function getMercadoPagoPayment(paymentId: string) {
   return mercadoPagoFetch<MercadoPagoPayment>(`/v1/payments/${paymentId}`);
 }
 
+export function shouldUseMercadoPagoSandbox() {
+  return process.env.MERCADO_PAGO_USE_SANDBOX === "true";
+}
+
 export function isMercadoPagoWebhookSignatureConfigured() {
   return Boolean(process.env.MERCADO_PAGO_WEBHOOK_SECRET);
 }
