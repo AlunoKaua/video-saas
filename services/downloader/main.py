@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 from yt_dlp import YoutubeDL
 
+import base64
 import logging
 import os
 import re
@@ -19,6 +20,7 @@ logger = logging.getLogger("video_saas_downloader")
 MAX_DURATION_SECONDS = 60 * 30
 DOWNLOAD_DIR = Path(gettempdir()) / "video-saas-downloads"
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+COOKIES_FILE = DOWNLOAD_DIR / "youtube-cookies.txt"
 
 
 class VideoRequest(BaseModel):
@@ -32,6 +34,23 @@ def verify_internal_token(authorization: Optional[str]) -> None:
         raise HTTPException(status_code=500, detail="INTERNAL_API_TOKEN not configured")
     if authorization != f"Bearer {expected}":
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+def youtube_cookie_file() -> Optional[str]:
+    cookies_base64 = os.getenv("YOUTUBE_COOKIES_BASE64")
+    if not cookies_base64:
+        return None
+
+    try:
+        cookies = base64.b64decode(cookies_base64).decode("utf-8")
+    except Exception as exc:
+        logger.exception("Invalid YOUTUBE_COOKIES_BASE64")
+        raise HTTPException(status_code=500, detail="YOUTUBE_COOKIES_BASE64 inválido") from exc
+
+    if not COOKIES_FILE.exists() or COOKIES_FILE.read_text() != cookies:
+        COOKIES_FILE.write_text(cookies)
+
+    return str(COOKIES_FILE)
 
 
 def ydl_options(**overrides):
@@ -50,6 +69,11 @@ def ydl_options(**overrides):
             "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
         },
     }
+
+    cookie_file = youtube_cookie_file()
+    if cookie_file:
+        options["cookiefile"] = cookie_file
+
     options.update(overrides)
     return options
 
