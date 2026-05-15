@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { PAID_CREDITS } from "@/lib/download-quota";
+import { PAID_CREDITS, PREMIUM_CREDITS } from "@/lib/download-quota";
 import { prisma } from "@/lib/prisma";
 import { CREDIT_PACKAGE_AMOUNT_CENTS, CREDIT_PACKAGE_CURRENCY, getStripe } from "@/lib/stripe";
 
@@ -102,6 +102,59 @@ async function handleCompletedSubscription(checkout: Stripe.Checkout.Session) {
   });
 }
 
+function getInvoiceSubscriptionId(invoice: Stripe.Invoice) {
+  const subscription = invoice.parent?.subscription_details?.subscription;
+  if (!subscription) return null;
+  return typeof subscription === "string" ? subscription : subscription.id;
+}
+
+async function handlePaidSubscriptionInvoice(invoice: Stripe.Invoice) {
+  const subscriptionId = getInvoiceSubscriptionId(invoice);
+  const customerId = getCustomerId(invoice.customer);
+  const currency = invoice.currency?.toLowerCase();
+
+  if (!subscriptionId || !customerId || invoice.status !== "paid" || !invoice.billing_reason?.startsWith("subscription")) return;
+
+  await prisma.$transaction(async (tx) => {
+    const existingPurchase = await tx.purchase.findUnique({ where: { stripeInvoiceId: invoice.id } });
+    if (existingPurchase) return;
+
+    const user = await tx.user.findFirst({
+      where: {
+        OR: [{ stripeSubscriptionId: subscriptionId }, { stripeCustomerId: customerId }]
+      },
+      select: { id: true }
+    });
+
+    if (!user) return;
+
+    await tx.purchase.create({
+      data: {
+        userId: user.id,
+        provider: "STRIPE",
+        kind: "PREMIUM_30_DAYS",
+        stripeInvoiceId: invoice.id,
+        amount: invoice.amount_paid,
+        currency,
+        creditsGranted: PREMIUM_CREDITS,
+        premiumDaysGranted: 30,
+        status: "PAID"
+      }
+    });
+
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        subscriptionStatus: "ACTIVE",
+        subscriptionCurrentPeriodEnd: invoice.period_end ? new Date(invoice.period_end * 1000) : undefined,
+        downloadCredits: { increment: PREMIUM_CREDITS }
+      }
+    });
+  });
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -135,6 +188,10 @@ export async function POST(request: Request) {
 
   if (["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"].includes(event.type)) {
     await updateUserSubscription(event.data.object as Stripe.Subscription);
+  }
+
+  if (event.type === "invoice.paid") {
+    await handlePaidSubscriptionInvoice(event.data.object as Stripe.Invoice);
   }
 
   return NextResponse.json({ received: true });

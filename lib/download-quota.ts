@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export const INITIAL_FREE_DOWNLOADS = 5;
 export const PAID_CREDITS = 10;
+export const PREMIUM_CREDITS = 40;
 
 export function isActiveSubscription(subscription: { subscriptionStatus: string; subscriptionCurrentPeriodEnd: Date | null }) {
   return subscription.subscriptionStatus === "ACTIVE" && (!subscription.subscriptionCurrentPeriodEnd || subscription.subscriptionCurrentPeriodEnd > new Date());

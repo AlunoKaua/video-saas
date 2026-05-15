@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { PREMIUM_CREDITS } from "@/lib/download-quota";
 import { authOptions } from "@/lib/auth";
 import { createMercadoPagoPreference, MERCADO_PAGO_CURRENCY, MERCADO_PAGO_PREMIUM_AMOUNT_CENTS, MERCADO_PAGO_PREMIUM_DAYS } from "@/lib/mercado-pago";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,7 @@ export async function POST() {
       kind: "PREMIUM_30_DAYS",
       amount: MERCADO_PAGO_PREMIUM_AMOUNT_CENTS,
       currency: MERCADO_PAGO_CURRENCY,
+      creditsGranted: PREMIUM_CREDITS,
       premiumDaysGranted: MERCADO_PAGO_PREMIUM_DAYS,
       status: "PENDING"
     }
@@ -32,7 +34,7 @@ export async function POST() {
   const preference = await createMercadoPagoPreference({
     items: [
       {
-        title: "Premium por 30 dias",
+        title: "Premium por 30 dias + 40 créditos",
         quantity: 1,
         unit_price: MERCADO_PAGO_PREMIUM_AMOUNT_CENTS / 100,
         currency_id: MERCADO_PAGO_CURRENCY

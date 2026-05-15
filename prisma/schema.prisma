@@ -115,6 +115,7 @@ model Purchase {
   kind                     PurchaseKind    @default(CREDITS)
   stripeSessionId          String?         @unique
   stripePaymentId          String?
+  stripeInvoiceId          String?         @unique
   mercadoPagoPreferenceId  String?         @unique
   mercadoPagoPaymentId     String?         @unique
   amount                   Int

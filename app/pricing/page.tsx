@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Preços de créditos e Premium",
-  description: "Compre créditos para downloads autorizados por R$10 ou ative Premium por R$25 para vídeos longos permitidos. Pagamento via PIX ou cartão.",
+  description: "Compre créditos para downloads autorizados por R$10 ou ative Premium por R$25 com 40 créditos inclusos para vídeos longos permitidos. Pagamento via PIX ou cartão.",
   alternates: {
     canonical: "/pricing"
   }
@@ -47,9 +47,9 @@ export default function PricingPage() {
           </div>
           <ul className="mt-6 space-y-3 text-slate-200">
             <li>Libera vídeos acima de 30 minutos</li>
-            <li>Créditos avulsos continuam separados</li>
+            <li>Inclui 40 créditos para downloads autorizados</li>
             <li>Cada download concluído ainda consome 1 crédito</li>
-            <li>PIX renova manualmente e cartão cobra mensalmente</li>
+            <li>PIX adiciona 40 créditos na compra; cartão adiciona a cada mensalidade paga</li>
           </ul>
           <div className="mt-8 space-y-3">
             <form action="/api/mercado-pago/premium" method="POST">
@@ -64,7 +64,7 @@ export default function PricingPage() {
       <p className="mt-8 text-center text-sm text-slate-500"><Link href="/dashboard" className="font-semibold text-brand-600">Voltar para dashboard</Link></p>
       <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 text-sm leading-6 text-slate-600 shadow-sm">
         <h2 className="text-lg font-bold text-slate-950">Como escolher seu plano</h2>
-        <p className="mt-3">Cada download concluído consome 1 crédito. O pacote de R$10 adiciona 10 créditos para vídeos permitidos de até 30 minutos. O Premium de R$25 libera vídeos longos permitidos por 30 dias, mas os créditos continuam sendo necessários.</p>
+        <p className="mt-3">Cada download concluído consome 1 crédito. O pacote de R$10 adiciona 10 créditos para vídeos permitidos de até 30 minutos. O Premium de R$25 libera vídeos longos permitidos por 30 dias e inclui 40 créditos: no PIX eles entram junto com a compra; no cartão entram a cada mensalidade paga.</p>
         <p className="mt-3">Use o serviço apenas com vídeos próprios, licenciados ou para os quais você tenha permissão de download.</p>
       </section>
     </main>

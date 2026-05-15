@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
         where: { id: purchase.userId },
         data: {
           subscriptionStatus: "ACTIVE",
-          subscriptionCurrentPeriodEnd: addDays(base, purchase.premiumDaysGranted)
+          subscriptionCurrentPeriodEnd: addDays(base, purchase.premiumDaysGranted),
+          downloadCredits: { increment: purchase.creditsGranted }
         }
       });
     }

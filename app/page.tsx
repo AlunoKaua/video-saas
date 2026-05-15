@@ -21,7 +21,7 @@ export default function Home() {
     },
     {
       question: "Quando preciso do Premium?",
-      answer: "O Premium libera downloads de vídeos permitidos com mais de 30 minutos. Os créditos continuam sendo necessários para cada download."
+      answer: "O Premium libera downloads de vídeos permitidos com mais de 30 minutos e inclui 40 créditos. Cada download concluído ainda consome 1 crédito."
     },
     {
       question: "Quais pagamentos são aceitos?",
@@ -74,7 +74,7 @@ export default function Home() {
         <div className="max-w-3xl">
           <p className="text-sm font-semibold text-brand-600">Recursos</p>
           <h2 className="mt-2 text-3xl font-bold text-slate-950">Downloads autorizados com controle simples.</h2>
-          <p className="mt-4 text-slate-600">O Video SaaS combina créditos de download, histórico com thumbnails, pagamentos por PIX e cartão e Premium para vídeos longos permitidos. Você mantém controle sobre saldo, status e arquivos baixados.</p>
+          <p className="mt-4 text-slate-600">O Video SaaS combina créditos de download, histórico com thumbnails, pagamentos por PIX e cartão e Premium com 40 créditos para vídeos longos permitidos. Você mantém controle sobre saldo, status e arquivos baixados.</p>
         </div>
       </section>
 
