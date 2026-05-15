@@ -126,7 +126,10 @@ vercel env add GOOGLE_CLIENT_ID production
 vercel env add GOOGLE_CLIENT_SECRET production
 vercel env add STRIPE_SECRET_KEY production
 vercel env add STRIPE_WEBHOOK_SECRET production
+vercel env add STRIPE_PRICE_ID production
 vercel env add STRIPE_SUBSCRIPTION_PRICE_ID production
+vercel env add MERCADO_PAGO_ACCESS_TOKEN production
+vercel env add MERCADO_PAGO_USE_SANDBOX production
 vercel env add DOWNLOADER_SERVICE_URL production
 vercel env add INTERNAL_API_TOKEN production
 ```
@@ -137,7 +140,9 @@ Valores importantes:
 NEXTAUTH_URL="https://seu-app.vercel.app"
 DOWNLOADER_SERVICE_URL="https://seu-servico.onrender.com"
 INTERNAL_API_TOKEN="mesmo-token-usado-no-render"
-STRIPE_SUBSCRIPTION_PRICE_ID="price_..."
+STRIPE_PRICE_ID="price_..."
+MERCADO_PAGO_USE_SANDBOX="true"
+MERCADO_PAGO_WEBHOOK_SECRET="" # opcional; quando configurado, o webhook exige headers x-signature/x-request-id
 ```
 
 Publique em produção:
@@ -183,6 +188,18 @@ https://seu-app.vercel.app/api/stripe/webhook
 ```
 
 O produto cobra R$10,00 em BRL e libera acesso conforme o fluxo validado pelo webhook.
+
+## Mercado Pago PIX
+
+Configure `MERCADO_PAGO_ACCESS_TOKEN` no `.env` ou na Vercel. Use credenciais de teste enquanto `MERCADO_PAGO_USE_SANDBOX="true"`.
+
+Webhook de produção ou teste:
+
+```txt
+https://seu-app.vercel.app/api/mercado-pago/webhook
+```
+
+O PIX de créditos cobra R$10,00 e libera 10 créditos após o pagamento aprovado. O PIX Premium cobra R$25,00 e libera ou estende 30 dias de Premium; ele não é recorrente automático.
 
 ## Verificação
 

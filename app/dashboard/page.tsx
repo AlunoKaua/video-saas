@@ -1,9 +1,18 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { DownloadForm } from "@/components/download-form";
 import { authOptions } from "@/lib/auth";
 import { isActiveSubscription } from "@/lib/download-quota";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: {
+    index: false,
+    follow: false
+  }
+};
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);

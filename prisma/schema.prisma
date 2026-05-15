@@ -19,6 +19,16 @@ enum PurchaseStatus {
   FAILED
 }
 
+enum PaymentProvider {
+  STRIPE
+  MERCADO_PAGO
+}
+
+enum PurchaseKind {
+  CREDITS
+  PREMIUM_30_DAYS
+}
+
 enum SubscriptionStatus {
   NONE
   ACTIVE
@@ -99,17 +109,23 @@ model Download {
 }
 
 model Purchase {
-  id                String         @id @default(cuid())
-  userId            String
-  stripeSessionId   String         @unique
-  stripePaymentId   String?
-  amount            Int
-  currency          String
-  creditsGranted    Int
-  status            PurchaseStatus @default(PENDING)
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                       String          @id @default(cuid())
+  userId                   String
+  provider                 PaymentProvider @default(STRIPE)
+  kind                     PurchaseKind    @default(CREDITS)
+  stripeSessionId          String?         @unique
+  stripePaymentId          String?
+  mercadoPagoPreferenceId  String?         @unique
+  mercadoPagoPaymentId     String?         @unique
+  amount                   Int
+  currency                 String
+  creditsGranted           Int             @default(0)
+  premiumDaysGranted       Int             @default(0)
+  status                   PurchaseStatus  @default(PENDING)
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
 
   @@index([userId, createdAt])
+  @@index([provider, status])
 }

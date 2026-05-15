@@ -5,9 +5,44 @@ import { LogoutButton } from "@/components/logout-button";
 import { authOptions } from "@/lib/auth";
 import "./globals.css";
 
+const siteUrl = process.env.NEXTAUTH_URL || "https://video-saas-psi.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Video SaaS",
-  description: "Baixe vídeos permitidos com créditos grátis e Stripe."
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Video SaaS | Downloader de vídeos permitidos com PIX e créditos",
+    template: "%s | Video SaaS"
+  },
+  description: "Baixe vídeos próprios, licenciados ou autorizados com controle de créditos, histórico de downloads, PIX, cartão e Premium para vídeos longos permitidos.",
+  keywords: [
+    "download de vídeos permitidos",
+    "baixar vídeos próprios",
+    "baixar vídeos licenciados",
+    "downloader de vídeo autorizado",
+    "download de YouTube permitido",
+    "créditos de download",
+    "pagamento PIX para download"
+  ],
+  alternates: {
+    canonical: "/"
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: siteUrl,
+    siteName: "Video SaaS",
+    title: "Video SaaS | Downloads autorizados com créditos",
+    description: "Cole a URL de um vídeo próprio, licenciado ou autorizado, use créditos e acompanhe seu histórico em um painel simples."
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Video SaaS | Downloads autorizados com créditos",
+    description: "Baixe vídeos próprios, licenciados ou autorizados com créditos, PIX e cartão."
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
