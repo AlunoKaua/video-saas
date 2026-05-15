@@ -62,7 +62,6 @@ export async function POST() {
         { id: "hipercard" }
       ],
       excluded_payment_types: [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }, { id: "atm" }],
-      default_payment_method_id: "pix",
       installments: 1
     }
   });
